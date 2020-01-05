@@ -10,20 +10,18 @@ function hideFloater() {
 
 function fillBookmarksList(bookmarks = []) {
   const bookamarksList = document.querySelector(".bookmarks-list");
-  const bookmarkForm = document.querySelector(".bookmark-form");
 
   bookamarksList.innerHTML = bookmarks
-    .map((bookmark,i) => {
+    .map((bookmark, i) => {
       return `
-        <a href="#" target="_blank" class="bookmark" data-id="${i}">
-          <div class="img"></div>
+        <a href="${bookmark.link}" target="_blank" class="bookmark" data-id="${i}">
+          <div class="img" style='background-image:url(${bookmark.image})'></div>
           <div class="title">${bookmark.title}</div>
           <span class="glyphicon glyphicon-remove"></span>
         </a>
       `;
     })
     .join("");
-  bookmarkForm.reset();
 }
 
 function saveBookmarks(bookmarks = []) {
@@ -35,26 +33,38 @@ function createBookmark(e) {
   const bookmarkForm = document.querySelector(".bookmark-form");
   const bookmarkInput = bookmarkForm.querySelector('input[type="text"');
   const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
-  const title = bookmarkInput.value;
-  if (title === "") {
+  if (bookmarkInput.value === "") {
     return;
   }
-  bookmark = {
-    title: title
-  };
-  bookmarks.push(bookmark);
-  fillBookmarksList(bookmarks);
-  saveBookmarks(bookmarks);
+  const apiUrl = "https://opengraph.io/api/1.0/site";
+  const appId = "58858c7bcf07b61e64257391";
+  const url = encodeURIComponent(bookmarkInput.value);
+  fetch(`${apiUrl}/${url}?app_id=${appId}`)
+    .then(response => response.json())
+    .then(data => {
+      bookmark = {
+        title: data.hybridGraph.title,
+        image: data.hybridGraph.image,
+        link: data.hybridGraph.url
+      };
+      bookmarks.push(bookmark);
+      fillBookmarksList(bookmarks);
+      saveBookmarks(bookmarks);
+      bookmarkForm.reset();
+    })
+    .catch(error => {
+      alert("Error while fetching data");
+    });
 }
 
-function removeBookmark(e){
-  if(!e.target.matches('.glyphicon-remove')){
+function removeBookmark(e) {
+  if (!e.target.matches(".glyphicon-remove")) {
     return;
   }
   e.preventDefault();
   const index = e.target.parentNode.dataset.id;
   const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
-  bookmarks.splice(index,1);
+  bookmarks.splice(index, 1);
   fillBookmarksList(bookmarks);
   saveBookmarks(bookmarks);
 }
@@ -73,4 +83,4 @@ const bookmarkForm = document.querySelector(".bookmark-form");
 bookmarkForm.addEventListener("submit", createBookmark);
 
 const bookamarksList = document.querySelector(".bookmarks-list");
-bookamarksList.addEventListener('click',removeBookmark);
+bookamarksList.addEventListener("click", removeBookmark);
