@@ -10,13 +10,20 @@ function hideFloater() {
 
 function fillBookmarksList(bookmarks = []) {
   const bookamarksList = document.querySelector(".bookmarks-list");
-  const bookamrkForm = document.querySelector(".bookmark-form");
+  const bookmarkForm = document.querySelector(".bookmark-form");
+
   bookamarksList.innerHTML = bookmarks
-    .map(bookmark => {
-      return `<a href ="#" target="_blank" class = "bookmark">${bookmark.title}</a>`;
+    .map((bookmark,i) => {
+      return `
+        <a href="#" target="_blank" class="bookmark" data-id="${i}">
+          <div class="img"></div>
+          <div class="title">${bookmark.title}</div>
+          <span class="glyphicon glyphicon-remove"></span>
+        </a>
+      `;
     })
     .join("");
-  bookamrkForm.reset();
+  bookmarkForm.reset();
 }
 
 function saveBookmarks(bookmarks = []) {
@@ -25,7 +32,9 @@ function saveBookmarks(bookmarks = []) {
 
 function createBookmark(e) {
   e.preventDefault();
-  const bookmarkInput = bookamrkForm.querySelector('input[type="text"');
+  const bookmarkForm = document.querySelector(".bookmark-form");
+  const bookmarkInput = bookmarkForm.querySelector('input[type="text"');
+  const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
   const title = bookmarkInput.value;
   if (title === "") {
     return;
@@ -37,6 +46,19 @@ function createBookmark(e) {
   fillBookmarksList(bookmarks);
   saveBookmarks(bookmarks);
 }
+
+function removeBookmark(e){
+  if(!e.target.matches('.glyphicon-remove')){
+    return;
+  }
+  e.preventDefault();
+  const index = e.target.parentNode.dataset.id;
+  const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
+  bookmarks.splice(index,1);
+  fillBookmarksList(bookmarks);
+  saveBookmarks(bookmarks);
+}
+
 const input = document.querySelector("input[type=text]");
 input.addEventListener("focusin", showFloater);
 input.addEventListener("focusout", hideFloater);
@@ -47,5 +69,8 @@ overlay.addEventListener("click", hideFloater);
 const bookmarks = JSON.parse(localStorage.getItem("bookmarks")) || [];
 fillBookmarksList(bookmarks);
 
-const bookamrkForm = document.querySelector(".bookmark-form");
-bookamrkForm.addEventListener("submit", createBookmark);
+const bookmarkForm = document.querySelector(".bookmark-form");
+bookmarkForm.addEventListener("submit", createBookmark);
+
+const bookamarksList = document.querySelector(".bookmarks-list");
+bookamarksList.addEventListener('click',removeBookmark);
